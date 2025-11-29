@@ -91,7 +91,7 @@ def IRK(f, u0, A, b, c, Tl, Tr, N):
     t = np.linspace(Tl, Tr, N + 1)
     y = np.zeros((N + 1, n))
     y[0] = np.asarray(u0)
-    
+
     for i in range(0, N):
         k = np.zeros((s, n))
         tn = t[i]
@@ -105,7 +105,9 @@ def IRK(f, u0, A, b, c, Tl, Tr, N):
 
             return np.reshape(r, s * n)
 
-        k = np.reshape(fsolve(lambda k: calc_k(k) - k, np.asarray(f(tn, *yn))), (s, n))
+        base = np.repeat([np.asarray(f(tn, *yn))], s)
+
+        k = np.reshape(fsolve(lambda k: calc_k(k) - k, base), (s, n))
         y[i + 1] = yn + h * np.dot(b, k)
 
     if single_var:

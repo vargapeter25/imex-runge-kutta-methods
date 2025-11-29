@@ -126,3 +126,34 @@ def IMEX(f: Callable[[float, np.ndarray], np.ndarray], g: ImplicitSolver, u0, A,
         y = y[:, 0]
 
     return h, t, y
+
+def IMEX_trapezoid(f: Callable[[float, np.ndarray], np.ndarray], g: Callable[[float, np.ndarray], np.ndarray], u0, Tl, Tr, N):    
+    single_var = False
+    if isinstance(u0, float) or isinstance(u0, int):
+        single_var = True
+        u0 = [u0]
+    
+    # Initialize starting values
+    h = (Tr - Tl) / N
+    n = len(u0)
+    t = np.linspace(Tl, Tr, N + 1)
+    y = np.zeros((N + 1, n))
+    y[0] = np.asarray(u0)
+    
+    f_ = lambda t, u: np.asarray(f(t, *u))
+    g_ = lambda t, u: np.asarray(g(t, *u))
+    f_g_ = lambda t, u: np.asarray(f(t, *u) + g(t, *u))
+
+    for i in range(N):
+        tn = t[i]
+        yn = y[i]
+
+        def f_impl(x):
+            return x - (yn + h / 2 * (f_g_(tn, yn) + f_(tn + h, yn + h * f_g_(tn, yn)) + g_(tn + h, x)))
+
+        y[i + 1] = fsolve(f_impl, yn)
+    
+    if single_var:
+        y = y[:, 0]
+
+    return h, t, y
