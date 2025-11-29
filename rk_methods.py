@@ -45,7 +45,7 @@ def ERK(f, u0, A, b, c, Tl, Tr, N):
         yn = y[i]
         for j in range(s):
             args = yn + h * A[j, :j] @ k[:j]
-            k[j] = np.asarray(f(tn + h * c[j], *args))
+            k[j] = np.asarray(f(tn + h * c[j], args))
 
         y[i + 1] = yn + h * np.dot(b, k)
 
@@ -101,11 +101,11 @@ def IRK(f, u0, A, b, c, Tl, Tr, N):
             k = np.reshape(k, (s, n))
             r = np.zeros((s, n))
             for j in range(s):
-                r[j] = np.asarray(f(tn + h * c[j], *(yn + h * A[j, :] @ k[:])))
+                r[j] = np.asarray(f(tn + h * c[j], (yn + h * A[j, :] @ k[:])))
 
             return np.reshape(r, s * n)
 
-        base = np.repeat([np.asarray(f(tn, *yn))], s)
+        base = np.repeat([np.asarray(f(tn, yn))], s)
 
         k = np.reshape(fsolve(lambda k: calc_k(k) - k, base), (s, n))
         y[i + 1] = yn + h * np.dot(b, k)

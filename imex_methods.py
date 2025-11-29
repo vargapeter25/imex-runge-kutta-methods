@@ -5,7 +5,7 @@ from typing import Callable, Any
 
 class ImplicitSolver():
     def __init__(self, f):
-        self.f = lambda t, u: np.asarray(f(t, *u))
+        self.f = lambda t, u: np.asarray(f(t, u))
     
     def __call__(self, t, x) -> np.ndarray:
         return self.f(t, x)
@@ -93,7 +93,7 @@ def IMEX(f: Callable[[float, np.ndarray], np.ndarray], g: ImplicitSolver, u0, A,
     y = np.zeros((N + 1, n))
     y[0] = np.asarray(u0)
 
-    f_ = lambda t, u: np.asarray(f(t, *u))
+    f_ = lambda t, u: np.asarray(f(t, u))
     
     for i in range(0, N):
         tn = t[i]
@@ -140,9 +140,9 @@ def IMEX_trapezoid(f: Callable[[float, np.ndarray], np.ndarray], g: Callable[[fl
     y = np.zeros((N + 1, n))
     y[0] = np.asarray(u0)
     
-    f_ = lambda t, u: np.asarray(f(t, *u))
-    g_ = lambda t, u: np.asarray(g(t, *u))
-    f_g_ = lambda t, u: np.asarray(f(t, *u) + g(t, *u))
+    f_ = lambda t, u: np.asarray(f(t, u))
+    g_ = lambda t, u: np.asarray(g(t, u))
+    f_g_ = lambda t, u: np.asarray(f(t, u) + g(t, u))
 
     for i in range(N):
         tn = t[i]
