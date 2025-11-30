@@ -19,11 +19,26 @@ class TestResult:
     error: float = 0
 
 def measure_method(method, name, y0, Tl, Tr, f_exact, target_error, Ns) -> TestResult:
+    """Measures the performanc of the given method.
+    
+    Selects the smallest possible `N` from `Ns` to satisfy the `target_error`, and measures 
+    the performance with that `N`.
+
+    :param method: Callable method.
+    :param name: Name of the method.
+    :param y0: Initial value.
+    :param Tl: Beggining of the time interval.
+    :param Tr: End of the time interval.
+    :f_exact: Callable, the solution function.
+    :target_error: Target error.
+    :Ns: Possible `N`-s.
+    :return: A TestResult with the measurement. 
+    """
+
     def f_impl(n):
         h, t, y = method(y0, Tl, Tr, n)
         return target_error - np.linalg.norm(y - f_exact(t), np.inf)
 
-    ## Calculate optimal log(N) as integer
     lo = -1
     hi = len(Ns) - 1
     while lo + 1 < hi:
@@ -59,6 +74,8 @@ def get_table_data(results) -> str:
     return data
 
 def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None, Ns = [2**12], verbose = True):
+    """ Creates the measurement table from multiple methods.
+    """
     data = None
     header = ['Name', 'Exec time (s)', 'Step Size', 'Error']
     for error in errors:
@@ -98,6 +115,8 @@ def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None
     return table
 
 def create_mesasurement_lin(f, g, G, A, A_, b, b_, c, Tl, Tr, f_exact, errors, Ns = [2**12], verbose = True):
+    """ Creates the measurement table from linear and ERK methods.
+    """
     data = None
     header = ['Name', 'Exec time (s)', 'Step Size', 'Error']
     for error in errors:

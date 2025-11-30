@@ -2,6 +2,8 @@ import numpy as np
 from itertools import product
 
 class DiscreteGrid:
+    """ Helper class to transform methods into finite differance.
+    """
     def __init__(self, sizes, min_v, max_v):
         self.sizes = np.asarray(sizes)
         self.N = np.prod(self.sizes)
@@ -25,17 +27,18 @@ class DiscreteGrid:
         return xs
 
     def discretize_function(self, f):
+        """ Evaluates function `f` on the grid points.
+        """
         f_ = np.zeros(self.N)
 
         for xs in product(*[range(n) for n in self.sizes]):
-            # print(xs)
-            # print(self.get_idx(xs))
-            # print('point: ', np.asarray(xs) / self.sizes * (self.max_v - self.min_v) + self.min_v)
             f_[self.get_idx(xs)] = f(np.asarray(xs) / self.sizes * (self.max_v - self.min_v) + self.min_v)
 
         return f_
 
     def derivative(self, dxs):
+        """ Calculates derivative matrix up to 2-nd order derivatives.
+        """
         if len(dxs) != len(self.sizes):
             raise ValueError('Dimension of parameter is wrong.')
 

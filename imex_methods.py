@@ -10,8 +10,17 @@ class ImplicitSolver():
     def __call__(self, t, x) -> np.ndarray:
         return self.f(t, x)
 
-    # solve for x = g(t, x * alpha + beta)
     def solve_for(self, t: float, alpha: float, beta: np.ndarray, base: np.ndarray) -> Any:
+        """ Calculates root of `0 = x - g(t, x * alpha + beta)`.
+
+        Uses `scipy` `fsolve` for calculating the root.
+
+        :param t: first parameter of the function.
+        :param alpha: coefficient
+        :param beta:  coefficient
+        :param base: Initial value used for implicit solver.
+        :return: The root of the function.
+        """
         f_impl = lambda x: x - self.f(t, alpha * x + beta)
         return fsolve(f_impl, base)
 
@@ -24,6 +33,14 @@ class LinearImplicitSolver(ImplicitSolver):
         return self.G @ x
 
     def solve_for(self, t: float, alpha: float, beta: np.ndarray, base: np.ndarray) -> Any:
+        """ Calculates the solution of `x = G * (alpha * x + beta)`.
+
+        :param t: first parameter of the function.
+        :param alpha: coefficient
+        :param beta:  coefficient
+        :param base: Initial value used for implicit solver.
+        :return: The root of the function.
+        """
         return np.linalg.solve(np.eye(*np.shape(self.G)) - self.G * alpha, self.G @ beta)  
 
 
@@ -34,6 +51,13 @@ class LinearImplicitSolverLU(ImplicitSolver):
         self.alphas = np.array([])
 
     def get_LU(self, alpha: float):
+        """ Get LU decomposition of `I - G * alpha`.
+
+        Calculates and cache-s LU decomposition, uses `scipy`.
+
+        :param alpha: coefficient
+        :return: LU decomposition
+        """
         i = np.argmax(np.isclose(self.alphas, alpha)) if len(self.alphas) > 0 else -1
         if i == -1 or not np.isclose(self.alphas[i], alpha):
             lu, piv = lu_factor(np.eye(*np.shape(self.G)) - self.G * alpha)
@@ -46,6 +70,16 @@ class LinearImplicitSolverLU(ImplicitSolver):
         return self.G @ x
 
     def solve_for(self, t: float, alpha: float, beta: np.ndarray, base: np.ndarray) -> Any:
+        """ Calculates the solution of `x = G * (alpha * x + beta)`.
+
+        Uses LU decomposition.
+
+        :param t: first parameter of the function.
+        :param alpha: coefficient
+        :param beta:  coefficient
+        :param base: Initial value used for implicit solver.
+        :return: The root of the function.
+        """
         return np.asarray(lu_solve(self.get_LU(alpha), self.G @ beta))
 
 
@@ -127,7 +161,20 @@ def IMEX(f: Callable[[float, np.ndarray], np.ndarray], g: ImplicitSolver, u0, A,
 
     return h, t, y
 
-def IMEX_trapezoid(f: Callable[[float, np.ndarray], np.ndarray], g: Callable[[float, np.ndarray], np.ndarray], u0, Tl, Tr, N):    
+def IMEX_trapezoid(f: Callable[[float, np.ndarray], np.ndarray], g: Callable[[float, np.ndarray], np.ndarray], u0, Tl, Tr, N):
+    """ Numerical solver for IVP on a uniform grid. Uses IMEX trapezoid method.
+
+    Uses IMEX trapezoid method for the `h = f + g` ODE, where `f` is considered non-stiff and `g` is considered stiff.
+
+    :param f: Explicit discretization is used for this part. `f` must have args in order (t, u).
+    :param g: Implicit discretization is used for this part. `g` must have args in order (t, u).
+    :param u0: The initial value at `Tl`.
+    :param Tl: The beginning of the time intervall.
+    :param Tr: The end of the time intervall.
+    :param N: The number of iterations.
+    :return: The numercial solution in the form `h, t, y`, step size, grid and values in order.
+    """
+
     single_var = False
     if isinstance(u0, float) or isinstance(u0, int):
         single_var = True
