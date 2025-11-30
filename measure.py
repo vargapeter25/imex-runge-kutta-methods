@@ -18,24 +18,22 @@ class TestResult:
     y: np.ndarray
     error: float = 0
 
-def measure_method(method, name, y0, Tl, Tr, f_exact, target_error, N_ = 2000, N_min = 2000, N_max = 10000) -> TestResult:
+def measure_method(method, name, y0, Tl, Tr, f_exact, target_error, Ns) -> TestResult:
     def f_impl(n):
-        n = min(max(int(n), 1), N_max)
         h, t, y = method(y0, Tl, Tr, n)
         return target_error - np.linalg.norm(y - f_exact(t), np.inf)
-    
-    if abs(f_impl(N_)) < target_error / 10:
-        N = N_
-    else:
-        l_val = f_impl(N_min)
-        r_val = f_impl(N_max)
 
-        if l_val > 0:
-            N = N_min
-        elif r_val < 0:
-            N = N_max
+    ## Calculate optimal log(N) as integer
+    lo = -1
+    hi = len(Ns) - 1
+    while lo + 1 < hi:
+        mid = (lo + hi) // 2
+        if f_impl(Ns[mid]) > 0:
+            hi = mid
         else:
-            N = int(brentq(f_impl, N_min, N_max, xtol=1))
+            lo = mid
+
+    N = Ns[hi]
 
     start = perf_counter()
     h, t, y = method(y0, Tl, Tr, N)
@@ -59,7 +57,7 @@ def get_table_data(results) -> str:
         data.append([result.name, f'{result.exec_time:.5f}', f'{result.h:.5f}', f'{result.error:.5f}'])
     return data
 
-def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None, N_min = 2000, N_max = 10000, verbose = True):
+def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None, Ns = [2**12], verbose = True):
     data = None
     header = ['Name', 'Exec time (s)', 'Step Size', 'Error']
     for error in errors:
@@ -71,9 +69,6 @@ def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None
             starting_method = lambda y0, Tl, Tr, N: IMEX(f, ImplicitSolver(g), y0, A, A_, b, b_, c, Tl, Tr, N) 
         else:
             starting_method = lambda y0, Tl, Tr, N: IMEX(f, LinearImplicitSolver(G), y0, A, A_, b, b_, c, Tl, Tr, N)
-
-        test_solve = measure_method(starting_method, 'Test', f_exact(Tl), Tl, Tr, f_exact, error, N_min, N_min, N_max)
-        N_ = test_solve.N
 
         f_ = lambda t, x: f(t, x) + g(t, x)
         c_ = [0] + c
@@ -92,7 +87,7 @@ def create_mesasurement(f, g, A, A_, b, b_, c, Tl, Tr, f_exact, errors, G = None
         for method, name in methods:
             if verbose:
                 print(f'Measuring method: {name}')
-            results.append(measure_method(method, name, f_exact(Tl), Tl, Tr, f_exact, error, N_, N_min, N_max))
+            results.append(measure_method(method, name, f_exact(Tl), Tl, Tr, f_exact, error, Ns))
 
         data_ = get_table_data(results)
 
