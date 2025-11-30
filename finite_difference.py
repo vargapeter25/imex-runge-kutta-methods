@@ -28,9 +28,10 @@ class DiscreteGrid:
         f_ = np.zeros(self.N)
 
         for xs in product(*[range(n) for n in self.sizes]):
-            print(xs)
-            print(self.get_idx(xs))
-            f_[self.get_idx(xs)] = f(xs)
+            # print(xs)
+            # print(self.get_idx(xs))
+            # print('point: ', np.asarray(xs) / self.sizes * (self.max_v - self.min_v) + self.min_v)
+            f_[self.get_idx(xs)] = f(np.asarray(xs) / self.sizes * (self.max_v - self.min_v) + self.min_v)
 
         return f_
 
@@ -68,4 +69,4 @@ class DiscreteGrid:
                     j = self.get_idx(cur_xs)
                     A[i, j] += val
         
-        return A * denominator
+        return A / denominator
