@@ -1,8 +1,8 @@
 import numpy as np
+import tabulate
 from scipy.optimize import brentq
 from dataclasses import dataclass
 from time import perf_counter
-import tabulate
 from rk_methods import *
 from imex_methods import *
 
@@ -19,7 +19,7 @@ class TestResult:
     error: float = 0
 
 def measure_method(method, name, y0, Tl, Tr, f_exact, target_error, Ns) -> TestResult:
-    """Measures the performanc of the given method.
+    """Measures the performance of the given method.
     
     Selects the smallest possible `N` from `Ns` to satisfy the `target_error`, and measures 
     the performance with that `N`.

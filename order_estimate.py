@@ -2,7 +2,7 @@ import numpy as np
 from typing import Any, Union
 
 def order_from_fine_grid(method: Any, u0: Union[np.ndarray, float], Tl: float, Tr: float, steps: list[int], fine_steps: int, norm_ord : Any = np.inf):
-    """ Estimating order of consistency for numerical solution based on fine grid.
+    """ Estimating the order of consistency for numerical solution based on a fine grid solution.
     Calculates the `E(h_i)` from based on `steps` and a fine grid defined by `fine_step`, and calculates the estimate based on adjacent values.
         
     :param method: The method callable with `y_0`, `t_0`, `t_f` and `N` for solving the ODE.
